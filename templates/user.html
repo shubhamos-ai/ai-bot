@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user.name }} - DevilSMP Bot Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .user-profile {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .avatar-lg {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+        }
+        .role-badge {
+            font-size: 0.8rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            padding: 5px 10px;
+        }
+        .action-card {
+            transition: all 0.2s ease;
+        }
+        .action-card:hover {
+            transform: translateY(-3px);
+        }
+        .danger-action {
+            border-left: 4px solid #f04747;
+        }
+        .warning-action {
+            border-left: 4px solid #faa61a;
+        }
+        .info-action {
+            border-left: 4px solid #5865F2;
+        }
+        .modal-header, .modal-footer {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">DevilSMP Bot Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Servers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/server/{{ server.id }}">Back to {{ server.name }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- User Profile -->
+        <div class="user-profile">
+            <div class="row align-items-center">
+                <div class="col-md-auto text-center mb-4 mb-md-0">
+                    <img src="{{ user.avatar_url }}" alt="{{ user.name }}" class="avatar-lg">
+                </div>
+                <div class="col-md">
+                    <div class="d-flex align-items-center mb-2">
+                        <h2 class="mb-0">{{ user.name }}</h2>
+                        {% if user.bot %}
+                        <span class="badge bg-info ms-3">BOT</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <span class="text-muted me-3">ID: {{ user.id }}</span>
+                        <span class="text-muted">Joined: {{ user.joined_at }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Roles:</h6>
+                        <div>
+                            {% for role in user.roles %}
+                            <span class="badge role-badge" style="background-color: {{ role.color if role.color else '#6c757d' }} !important;">{{ role.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <h6>Status:</h6>
+                        <div>
+                            {% if user.status == "online" %}
+                            <span class="badge bg-success">Online</span>
+                            {% elif user.status == "idle" %}
+                            <span class="badge bg-warning">Idle</span>
+                            {% elif user.status == "dnd" %}
+                            <span class="badge bg-danger">Do Not Disturb</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Offline</span>
+                            {% endif %}
+                            
+                            {% if user.is_timed_out %}
+                            <span class="badge bg-danger ms-2">Timed out until {{ user.timeout_until }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <h3 class="mb-4">Moderation Actions</h3>
+        <div class="row">
+            <!-- Timeout Action -->
+            <div class="col-md-4 mb-4">
+                <div class="card action-card warning-action">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-hourglass"></i> 
+                            {% if user.is_timed_out %}
+                            Remove Timeout
+                            {% else %}
+                            Timeout
+                            {% endif %}
+                        </h5>
+                        <p class="card-text text-muted">
+                            {% if user.is_timed_out %}
+                            User is currently timed out. You can remove their timeout.
+                            {% else %}
+                            Temporarily prevent the user from sending messages, adding reactions, joining voice channels, etc.
+                            {% endif %}
+                        </p>
+                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#timeoutModal">
+                            {% if user.is_timed_out %}
+                            Remove Timeout
+                            {% else %}
+                            Apply Timeout
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Kick Action -->
+            <div class="col-md-4 mb-4">
+                <div class="card action-card danger-action">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-door-open"></i> Kick User</h5>
+                        <p class="card-text text-muted">Remove the user from the server. They can rejoin with an invite.</p>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#kickModal">
+                            Kick User
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Ban Action -->
+            <div class="col-md-4 mb-4">
+                <div class="card action-card danger-action">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-hammer"></i> Ban User</h5>
+                        <p class="card-text text-muted">Permanently remove the user from the server. They cannot rejoin unless unbanned.</p>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#banModal">
+                            Ban User
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add Role Action -->
+            <div class="col-md-4 mb-4">
+                <div class="card action-card info-action">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-tags"></i> Manage Roles</h5>
+                        <p class="card-text text-muted">Add or remove roles from this user.</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#rolesModal">
+                            Manage Roles
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mute Voice Action -->
+            <div class="col-md-4 mb-4">
+                <div class="card action-card warning-action">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-mic-mute"></i> 
+                            {% if user.voice_muted %}
+                            Unmute in Voice
+                            {% else %}
+                            Mute in Voice
+                            {% endif %}
+                        </h5>
+                        <p class="card-text text-muted">
+                            {% if user.voice_muted %}
+                            Allow the user to speak in voice channels again.
+                            {% else %}
+                            Prevent the user from speaking in voice channels.
+                            {% endif %}
+                        </p>
+                        <form action="/action/{{ server.id }}/{{ user.id }}/voice-mute" method="POST">
+                            <button type="submit" class="btn btn-warning">
+                                {% if user.voice_muted %}
+                                Unmute in Voice
+                                {% else %}
+                                Mute in Voice
+                                {% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nick Action -->
+            <div class="col-md-4 mb-4">
+                <div class="card action-card info-action">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-pencil"></i> Change Nickname</h5>
+                        <p class="card-text text-muted">Change this user's nickname on the server.</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nickModal">
+                            Set Nickname
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Moderation History -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Moderation History</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                        <th>Moderator</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for action in moderation_history %}
+                                    <tr>
+                                        <td>{{ action.created_at }}</td>
+                                        <td>
+                                            {% if action.action_type == "ban" %}
+                                            <span class="badge bg-danger">Ban</span>
+                                            {% elif action.action_type == "kick" %}
+                                            <span class="badge bg-warning">Kick</span>
+                                            {% elif action.action_type == "timeout" %}
+                                            <span class="badge bg-warning">Timeout</span>
+                                            {% elif action.action_type == "remove_timeout" %}
+                                            <span class="badge bg-success">Timeout Removed</span>
+                                            {% elif action.action_type == "mute" %}
+                                            <span class="badge bg-warning">Mute</span>
+                                            {% elif action.action_type == "unmute" %}
+                                            <span class="badge bg-success">Unmute</span>
+                                            {% elif action.action_type == "warn" %}
+                                            <span class="badge bg-info">Warning</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ action.action_type }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ action.moderator_name }}</td>
+                                        <td>{{ action.reason }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    {% if not moderation_history %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-3">No moderation history available for this user.</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeout Modal -->
+    <div class="modal fade" id="timeoutModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        {% if user.is_timed_out %}
+                        Remove Timeout
+                        {% else %}
+                        Apply Timeout
+                        {% endif %}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/action/{{ server.id }}/{{ user.id }}/timeout" method="POST">
+                    <div class="modal-body">
+                        {% if user.is_timed_out %}
+                        <p>You are about to remove the timeout from <strong>{{ user.name }}</strong>.</p>
+                        <input type="hidden" name="remove_timeout" value="true">
+                        {% else %}
+                        <p>You are about to timeout <strong>{{ user.name }}</strong>.</p>
+                        <div class="mb-3">
+                            <label for="timeoutDuration" class="form-label">Duration</label>
+                            <select class="form-select" id="timeoutDuration" name="duration">
+                                <option value="60">1 minute</option>
+                                <option value="300">5 minutes</option>
+                                <option value="900">15 minutes</option>
+                                <option value="1800">30 minutes</option>
+                                <option value="3600">1 hour</option>
+                                <option value="7200">2 hours</option>
+                                <option value="21600">6 hours</option>
+                                <option value="43200">12 hours</option>
+                                <option value="86400">1 day</option>
+                                <option value="172800">2 days</option>
+                                <option value="604800">1 week</option>
+                            </select>
+                        </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label for="timeoutReason" class="form-label">Reason</label>
+                            <textarea class="form-control" id="timeoutReason" name="reason" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn {% if user.is_timed_out %}btn-success{% else %}btn-warning{% endif %}">
+                            {% if user.is_timed_out %}
+                            Remove Timeout
+                            {% else %}
+                            Apply Timeout
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kick Modal -->
+    <div class="modal fade" id="kickModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kick User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/action/{{ server.id }}/{{ user.id }}/kick" method="POST">
+                    <div class="modal-body">
+                        <p>You are about to kick <strong>{{ user.name }}</strong> from the server.</p>
+                        <div class="mb-3">
+                            <label for="kickReason" class="form-label">Reason</label>
+                            <textarea class="form-control" id="kickReason" name="reason" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Kick User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ban Modal -->
+    <div class="modal fade" id="banModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ban User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/action/{{ server.id }}/{{ user.id }}/ban" method="POST">
+                    <div class="modal-body">
+                        <p>You are about to ban <strong>{{ user.name }}</strong> from the server.</p>
+                        <div class="mb-3">
+                            <label for="banDuration" class="form-label">Duration</label>
+                            <select class="form-select" id="banDuration" name="duration">
+                                <option value="0">Permanent</option>
+                                <option value="86400">1 day</option>
+                                <option value="172800">2 days</option>
+                                <option value="604800">1 week</option>
+                                <option value="1209600">2 weeks</option>
+                                <option value="2592000">30 days</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="deleteMessages" class="form-label">Delete Messages</label>
+                            <select class="form-select" id="deleteMessages" name="delete_message_days">
+                                <option value="0">Don't delete any</option>
+                                <option value="1">Previous 24 hours</option>
+                                <option value="2">Previous 48 hours</option>
+                                <option value="3">Previous 3 days</option>
+                                <option value="7">Previous 7 days</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="banReason" class="form-label">Reason</label>
+                            <textarea class="form-control" id="banReason" name="reason" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Ban User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles Modal -->
+    <div class="modal fade" id="rolesModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Roles</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/action/{{ server.id }}/{{ user.id }}/roles" method="POST">
+                    <div class="modal-body">
+                        <p>Select the roles you want to assign to <strong>{{ user.name }}</strong>:</p>
+                        <div class="mb-3">
+                            {% for role in all_roles %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="roles[]" value="{{ role.id }}" id="role{{ role.id }}"
+                                       {% if role in user.roles %}checked{% endif %}>
+                                <label class="form-check-label" for="role{{ role.id }}">
+                                    {{ role.name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Roles</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nick Modal -->
+    <div class="modal fade" id="nickModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Change Nickname</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/action/{{ server.id }}/{{ user.id }}/nick" method="POST">
+                    <div class="modal-body">
+                        <p>Set a new nickname for <strong>{{ user.name }}</strong>:</p>
+                        <div class="mb-3">
+                            <label for="newNickname" class="form-label">New Nickname</label>
+                            <input type="text" class="form-control" id="newNickname" name="nickname" 
+                                   value="{{ user.nick if user.nick else '' }}" placeholder="Leave empty to reset">
+                        </div>
+                        <div class="mb-3">
+                            <label for="nickReason" class="form-label">Reason</label>
+                            <textarea class="form-control" id="nickReason" name="reason" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Nickname</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
