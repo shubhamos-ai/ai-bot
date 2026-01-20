@@ -1,0 +1,9 @@
+/* This file is no longer needed - all styles are now inline in the HTML template */
+/* The website has been completely redesigned with a clean, simple layout */
+/* All CSS is now embedded directly in the HTML for better maintainability */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+}
