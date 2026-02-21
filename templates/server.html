@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ server.name }} - DevilSMP Bot Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .user-card {
+            transition: all 0.3s ease;
+        }
+        .user-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .avatar-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .server-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .role-badge {
+            font-size: 0.7rem;
+            margin-right: 5px;
+            padding: 3px 8px;
+        }
+        .user-status-online {
+            border-left: 4px solid #43b581;
+        }
+        .user-status-idle {
+            border-left: 4px solid #faa61a;
+        }
+        .user-status-dnd {
+            border-left: 4px solid #f04747;
+        }
+        .user-status-offline {
+            border-left: 4px solid #747f8d;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-box i {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        .search-box input {
+            padding-left: 40px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">DevilSMP Bot Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Servers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-auto text-center mb-3 mb-md-0">
+                {% if server.icon_url %}
+                <img src="{{ server.icon_url }}" alt="{{ server.name }}" class="server-icon">
+                {% else %}
+                <div class="server-icon bg-secondary d-flex align-items-center justify-content-center">
+                    <span class="fs-3">{{ server.name[:1] }}</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md">
+                <h2>{{ server.name }}</h2>
+                <p class="text-muted mb-0">{{ server.member_count }} Members | {{ server.channel_count }} Channels</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Members</h5>
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="userSearch" class="form-control" placeholder="Search users...">
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">User</th>
+                                        <th scope="col">Roles</th>
+                                        <th scope="col">Joined</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTable">
+                                    {% for member in members %}
+                                    <tr class="user-card user-status-{{ member.status }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ member.avatar_url }}" alt="{{ member.name }}" class="avatar-img me-3">
+                                                <div>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="fw-bold">{{ member.name }}</span>
+                                                        {% if member.bot %}
+                                                        <span class="badge bg-info ms-2">BOT</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <small class="text-muted">#{{ member.discriminator }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% for role in member.roles[:3] %}
+                                            <span class="badge bg-secondary role-badge" style="background-color: {{ role.color if role.color else '#6c757d' }} !important;">{{ role.name }}</span>
+                                            {% endfor %}
+                                            {% if member.roles|length > 3 %}
+                                            <small class="text-muted">+{{ member.roles|length - 3 }} more</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ member.joined_at }}</small>
+                                        </td>
+                                        <td>
+                                            <a href="/user/{{ server.id }}/{{ member.id }}" class="btn btn-sm btn-primary">Manage</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // User search functionality
+        document.getElementById('userSearch').addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const userTable = document.getElementById('userTable');
+            const rows = userTable.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const username = rows[i].querySelector('td:first-child .fw-bold').textContent.toLowerCase();
+                rows[i].style.display = username.includes(searchTerm) ? '' : 'none';
+            }
+        });
+    </script>
+</body>
+</html>
