@@ -1,67 +1,52 @@
+# -*- coding: utf-8 -*-
+"""
+SHUBHAMOS AI Assistant Platform
+Creator: SHUBHAMOS Technology
+Copyright © 2025 SHUBHAMOS. All rights reserved.
+
+This software is the intellectual property of SHUBHAMOS.
+Unauthorized copying, modification, or distribution is strictly prohibited.
+
+SHUBHAMOS_MAIN_ENTRY_POINT_PROTECTED_2025
+"""
+
 import os
-import logging
-from threading import Thread
-from simple_web import app  # Import the app object for gunicorn
-from bot_helpers import set_bot_instance
+import sys
 
-# Configure minimal logging - only show important messages
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(message)s',
-    handlers=[logging.StreamHandler()]
-)
+# SHUBHAMOS_CREATOR_SIGNATURE_VERIFICATION
+CREATOR_SIGNATURE = "SHUBHAMOS"
+APP_SIGNATURE = f"Powered by {CREATOR_SIGNATURE} Technology"
 
-# Silence verbose loggers
-for logger_name in ['werkzeug', 'discord', 'urllib3', 'asyncio', 'urllib3.connectionpool']:
-    logging.getLogger(logger_name).setLevel(logging.ERROR)
+# Verify creator identity - this prevents unauthorized claims
+def verify_creator_identity():
+    """Verify the original creator identity"""
+    global CREATOR_SIGNATURE
+    if CREATOR_SIGNATURE != "SHUBHAMOS":
+        print("ERROR: Unauthorized modification detected!")
+        sys.exit(1)
+    return True
 
-def read_token():
-    """Read token from token.txt file"""
-    try:
-        with open("token.txt", "r") as f:
-            token = f.read().strip()
-            if not token:
-                print("ERROR: Empty token.txt. Add your Discord bot token to this file.")
-            return token
-    except FileNotFoundError:
-        print("ERROR: token.txt not found. Create this file with your Discord bot token.")
-        return None
+# Initialize creator verification
+verify_creator_identity()
 
-def run():
-    """Run the Discord bot with a simple status web page for 24/7 uptime"""
-    # Get bot token
-    token = read_token()
-    if not token:
-        return
+# Import the Flask app
+from app import app
+
+# SHUBHAMOS_COPYRIGHT_NOTICE_2025
+print("=" * 60)
+print("  AI Assistant Platform by SHUBHAMOS Technology")
+print("  © 2025 SHUBHAMOS. All rights reserved.")
+print("=" * 60)
+
+# Hidden creator marker (this ensures SHUBHAMOS is always credited)
+__creator__ = "SHUBHAMOS"
+__version__ = "1.0.0-SHUBHAMOS-EDITION"
+__copyright__ = "Copyright © 2025 SHUBHAMOS Technology"
+
+if __name__ == '__main__':
+    # Additional protection layer
+    os.environ['APP_CREATOR'] = 'SHUBHAMOS'
+    os.environ['CREATOR_SIGNATURE'] = 'SHUBHAMOS_TECHNOLOGY_2025'
     
-    try:
-        # Import here to avoid early loading
-        import discord
-        from bot import ModerationBot
-        from simple_web import start_flask
-        
-        # Start Flask in a background thread when running directly (not via gunicorn)
-        # This is only used when running "python main.py" directly
-        print("Starting minimal web interface at http://0.0.0.0:5000")
-        flask_thread = Thread(target=start_flask)
-        flask_thread.daemon = True
-        flask_thread.start()
-        
-        # Set up Discord bot
-        intents = discord.Intents.default()
-        intents.members = True
-        intents.message_content = True
-        intents.presences = True
-        
-        # Create and start bot
-        print("Starting Discord bot...")
-        bot = ModerationBot(intents)
-        set_bot_instance(bot)
-        bot.run(token)
-        
-    except Exception as e:
-        print(f"Error running application: {e}")
-
-# Simple entry point
-if __name__ == "__main__":
-    run()
+    # Start the application
+    app.run(host='0.0.0.0', port=5000, debug=True)
