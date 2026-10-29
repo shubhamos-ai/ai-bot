@@ -1,14 +1,10 @@
-discord-py>=2.5.2
-flask>=3.1.0
-flask-login>=0.6.3
-flask-sqlalchemy>=3.1.1
-flask-wtf>=1.2.2
-gunicorn>=23.0.0
-psycopg2-binary>=2.9.10
-pymongo[srv]>=4.12.0  # Includes DNS support, useful for MongoDB Atlas
-requests>=2.32.3
-email-validator>=2.2.0
-flask-login
-flask-wtf
-pymongo
-werkzeug
+# Project dependencies for Odoo VendorBridge
+fastapi>=0.110.0
+uvicorn[standard]>=0.30.0
+sqlalchemy>=2.0.30
+pydantic>=2.7.0
+python-dotenv>=1.0.1
+# Optional: for password hashing (if needed in future)
+passlib[bcrypt]>=1.7.4
+# For testing (optional)
+pytest>=8.2.0
